@@ -1,5 +1,8 @@
 """Build a standalone interactive page: python app.py."""
 from pathlib import Path
+import json
+from bokeh.events import DocumentReady
+from bokeh.document import Document
 from bokeh.embed import components
 from bokeh.layouts import column
 from bokeh.models import ColumnDataSource, CustomJS, Slider, LabelSet, Range1d
@@ -57,13 +60,19 @@ def rainbow_fill(plot, wavelengths, values):
 
 
 def build(output=None):
+    translations = {path.stem: json.loads(path.read_text(encoding='utf-8'))
+                    for path in sorted((ROOT / 'translations').glob('*.json'))}
+    copy = translations['en']
+    for language, strings in translations.items():
+        if strings.keys() != copy.keys() or any(not isinstance(v, str) or not v for v in strings.values()):
+            raise ValueError(f'Invalid or incomplete translation: {language}')
     sliders = [Slider(title=title, start=0, end=end, value=value, step=1,
                       sizing_mode='stretch_width', bar_color=color, name=name, margin=(0, 5))
                for title, end, value, color, name in [
-                   ('Red', 255, 255, '#df735f', 'red'),
-                   ('Green', 255, 160, '#7caa75', 'green'),
-                   ('Blue', 255, 80, '#789fdb', 'blue'),
-                   ('Luminosity (%)', 100, 100, '#b99456', 'luminosity')]]
+                   (copy['red'], 255, 255, '#df735f', 'red'),
+                   (copy['green'], 255, 160, '#7caa75', 'green'),
+                   (copy['blue'], 255, 80, '#789fdb', 'blue'),
+                   (copy['luminosity'], 100, 100, '#b99456', 'luminosity')]]
     values = [v * 100 for v in cone_activation(255, 160, 80)]
     source = ColumnDataSource(dict(cone=['S', 'M', 'L'], value=values,
                                    label=[f'{v:.1f}%' for v in values],
@@ -77,7 +86,8 @@ def build(output=None):
     plot.add_layout(LabelSet(x='cone', y='value', text='label', source=source,
                             y_offset=9, text_align='center', text_font_size='12px', text_color='#33443d'))
     plot.yaxis.ticker = [0, 25, 50, 75, 100]
-    plot.yaxis.axis_label = 'Relative response (%)'
+    plot.yaxis.axis_label = copy['response']
+    plot.yaxis[0].name = 'response_axis'
     plot.xgrid.grid_line_color = None
     plot.ygrid.grid_line_color = '#e6e7df'
     plot.axis.axis_line_color = None
@@ -86,16 +96,23 @@ def build(output=None):
     plot.axis.major_label_text_color = '#53635b'
     plot.xaxis.major_label_text_font_size = '16px'
     spectrum_source = ColumnDataSource(pixel_spectrum(255, 160, 80), name='pixel_spectrum')
-    spectrum = wavelength_plot('Relative emission')
+    spectrum = wavelength_plot(copy['emission'])
+    spectrum.xaxis[0].name = 'spectrum_wavelength'
+    spectrum.yaxis[0].name = 'emission_axis'
     spectrum_fill = rainbow_fill(spectrum, spectrum_source.data['wavelength'],
                                  spectrum_source.data['total'])
     for channel, color in [('blue', '#789fdb'), ('green', '#7caa75'), ('red', '#df735f')]:
         spectrum.line('wavelength', channel, source=spectrum_source, color=color,
                       line_width=1.5)
     spectrum.line('wavelength', 'total', source=spectrum_source, color='#33443d',
-                  line_width=2, legend_label='Combined')
+                  line_width=2, legend_label=copy['combined'])
+    spectrum.legend[0].items[0].name = 'combined_legend'
     sensitivity_source = ColumnDataSource(cone_sensitivities())
-    sensitivity = wavelength_plot('Relative sensitivity')
+    sensitivity = wavelength_plot(copy['sensitivity'])
+    sensitivity.xaxis[0].name = 'sensitivity_wavelength'
+    sensitivity.yaxis[0].name = 'sensitivity_axis'
+    for panel in (spectrum, sensitivity):
+        panel.xaxis.axis_label = copy['wavelength']
     envelope = [max(values) for values in zip(*(sensitivity_source.data[c] for c in ('S', 'M', 'L')))]
     rainbow_fill(sensitivity, sensitivity_source.data['wavelength'], envelope)
     for cone, color in [('S', '#789fdb'), ('M', '#7caa75'), ('L', '#df735f')]:
@@ -117,10 +134,15 @@ def build(output=None):
     for slider in sliders:
         slider.js_on_change('value', callback)
     controls = column(*sliders, sizing_mode='stretch_width', spacing=0)
+    document = Document()
+    for root in (controls, plot, spectrum, sensitivity):
+        document.add_root(root)
+    document.js_on_event(DocumentReady, CustomJS(code="window.spectrI18n.apply(Bokeh.documents[0]);"))
     script, divs = components(dict(controls=controls, plot=plot,
                                   spectrum=spectrum, sensitivity=sensitivity))
     html = Template((ROOT / 'templates/index.html').read_text()).render(
-        resources=INLINE.render(), script=script, **divs)
+        resources=INLINE.render(), script=script, translations=translations, copy=copy,
+        localization_script=(ROOT / 'localization.js').read_text(), **divs)
     target = Path(output) if output else ROOT / 'dist/index.html'
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(html)

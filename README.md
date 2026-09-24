@@ -80,3 +80,44 @@ The right panel shows published Stockman–Sharpe 2° cone sensitivity data, eac
 normalized to its own peak. See `data/README.md` for provenance. The new plots
 are teaching illustrations; response bars still use the original HPE matrix,
 not an integral of the hypothetical emission and Stockman–Sharpe curves.
+
+## Manage translations
+
+The language selector below the header supports English, French, and Spanish.
+English is the default; a visitor's selection is saved in their browser when
+local storage is available. Switching languages preserves the current light
+settings. The brand name and “An experiment in seeing” stay in English.
+
+Edit the plain-text values in these UTF-8 JSON files:
+
+- `translations/en.json`: English and the reference list of translation keys.
+- `translations/fr.json`: French.
+- `translations/es.json`: Spanish.
+
+For example, change `"heading"` to edit the main headline, `"intro"` for the
+introduction, and `"model_*"` entries for the model explanation. Keep keys the
+same across every file. Keep `{s}`, `{m}`, and `{l}` in `response_readout`:
+the app substitutes the current cone percentages. Use plain text, not HTML.
+Scientific symbols and names (S/M/L, sRGB, nm, Stockman–Sharpe) remain unchanged.
+
+Rebuild after editing:
+
+```sh
+python app.py
+```
+
+Refresh the local preview, or redeploy the rebuilt `dist/index.html`. All
+translations are embedded in that standalone file; no translation API or
+network request is needed. The build rejects missing/extra keys and empty values.
+
+To add a language, copy `translations/en.json` to a language-code file such as
+`translations/de.json`, translate every value, and add an option to the
+`#language` selector in `templates/index.html`, for example
+`<option value="de" lang="de">Deutsch</option>`. Rebuild and check the page,
+charts, controls, and model explanation in that language.
+
+For new UI text, add the same key to every catalog and use
+`data-i18n="your_key"` on its text element (with an English Jinja fallback like
+`{{ copy["your_key"] | e }}`). Use `data-i18n-aria` for accessible labels.
+`localization.js` handles switching, number formatting, and Bokeh labels;
+`callbacks.js` refreshes localized readouts when light settings change.

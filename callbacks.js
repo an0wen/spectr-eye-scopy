@@ -16,4 +16,4 @@ source.change.emit();
 const displayed = linear.map(v => Math.round(255 * encode(v)));
 document.getElementById('swatch').style.backgroundColor = `rgb(${displayed.join(',')})`;
 document.getElementById('rgb-readout').textContent = `RGB ${displayed.join(' · ')}`;
-document.getElementById('response-readout').textContent = `S ${values[0].toFixed(1)}%, M ${values[1].toFixed(1)}%, L ${values[2].toFixed(1)}%`;
+window.spectrI18n.updateReadouts(Bokeh.documents[0]);
