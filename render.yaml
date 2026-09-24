@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: spectr-eye-scopy
+    runtime: static
+    buildCommand: pip install -r requirements.txt && python app.py
+    staticPublishPath: ./dist
