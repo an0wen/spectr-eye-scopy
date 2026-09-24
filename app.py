@@ -10,6 +10,7 @@ from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from jinja2 import Template
 from color_model import RGB_TO_LMS, cone_activation
+from pigment_model import load_pigments, pigment_signal, spectrum_rgb, color_matching_data, XYZ_TO_RGB
 from spectral_model import PIXEL_BASIS, pixel_spectrum, cone_sensitivities
 
 ROOT = Path(__file__).resolve().parent
@@ -59,13 +60,23 @@ def rainbow_fill(plot, wavelengths, values):
     return fill
 
 
-def build(output=None):
+def build(output=None, page="screen"):
+    is_pigment = page == "pigments"
+    pigments = load_pigments()
     translations = {path.stem: json.loads(path.read_text(encoding='utf-8'))
                     for path in sorted((ROOT / 'translations').glob('*.json'))}
-    copy = translations['en']
+    copy = dict(translations['en'])
     for language, strings in translations.items():
         if strings.keys() != copy.keys() or any(not isinstance(v, str) or not v for v in strings.values()):
             raise ValueError(f'Invalid or incomplete translation: {language}')
+    for pigment in pigments:
+        if any(key not in copy for key in (pigment['id'], pigment['id'] + '_note')):
+            raise ValueError(f"Missing pigment translation: {pigment['id']}")
+    if is_pigment:
+        for strings in translations.values():
+            for key in ('intro', 'mix_step', 'spectrum_heading', 'spectrum_caption', 'model_conversion', 'model_limits', 'model_spectrum', 'swatch_description', 'emission', 'combined', 'spectrum_description', 'eye_description'):
+                strings[key] = strings['pigment_' + key]
+        copy = translations['en']
     sliders = [Slider(title=title, start=0, end=end, value=value, step=1,
                       sizing_mode='stretch_width', bar_color=color, name=name, margin=(0, 5))
                for title, end, value, color, name in [
@@ -73,7 +84,7 @@ def build(output=None):
                    (copy['green'], 255, 160, '#7caa75', 'green'),
                    (copy['blue'], 255, 80, '#789fdb', 'blue'),
                    (copy['luminosity'], 100, 100, '#b99456', 'luminosity')]]
-    values = [v * 100 for v in cone_activation(255, 160, 80)]
+    values = [v * 100 for v in (pigment_signal(pigments[0])[1] if is_pigment else cone_activation(255, 160, 80))]
     source = ColumnDataSource(dict(cone=['S', 'M', 'L'], value=values,
                                    label=[f'{v:.1f}%' for v in values],
                                    color=['#789fdb', '#7caa75', '#df735f']), name='cone_responses')
@@ -96,18 +107,21 @@ def build(output=None):
     plot.axis.major_label_text_color = '#53635b'
     plot.xaxis.major_label_text_font_size = '16px'
     spectrum_source = ColumnDataSource(pixel_spectrum(255, 160, 80), name='pixel_spectrum')
+    if is_pigment:
+        spectrum_source.data['total'] = pigment_signal(pigments[0])[0]
     spectrum = wavelength_plot(copy['emission'])
     spectrum.xaxis[0].name = 'spectrum_wavelength'
     spectrum.yaxis[0].name = 'emission_axis'
     spectrum_fill = rainbow_fill(spectrum, spectrum_source.data['wavelength'],
                                  spectrum_source.data['total'])
     for channel, color in [('blue', '#789fdb'), ('green', '#7caa75'), ('red', '#df735f')]:
-        spectrum.line('wavelength', channel, source=spectrum_source, color=color,
-                      line_width=1.5)
+        if not is_pigment:
+            spectrum.line('wavelength', channel, source=spectrum_source, color=color, line_width=1.5)
     spectrum.line('wavelength', 'total', source=spectrum_source, color='#33443d',
                   line_width=2, legend_label=copy['combined'])
     spectrum.legend[0].items[0].name = 'combined_legend'
-    sensitivity_source = ColumnDataSource(cone_sensitivities())
+    sensitivity_source = ColumnDataSource(cone_sensitivities(), name='cone_sensitivities')
+    spectrum_fill.name = 'spectrum_fill'
     sensitivity = wavelength_plot(copy['sensitivity'])
     sensitivity.xaxis[0].name = 'sensitivity_wavelength'
     sensitivity.yaxis[0].name = 'sensitivity_axis'
@@ -137,13 +151,16 @@ def build(output=None):
     document = Document()
     for root in (controls, plot, spectrum, sensitivity):
         document.add_root(root)
-    document.js_on_event(DocumentReady, CustomJS(code="window.spectrI18n.apply(Bokeh.documents[0]);"))
+    document.js_on_event(DocumentReady, CustomJS(code="window.spectrI18n.apply(Bokeh.documents[0]); window.initPigments?.(Bokeh.documents[0]);"))
     script, divs = components(dict(controls=controls, plot=plot,
                                   spectrum=spectrum, sensitivity=sensitivity))
     html = Template((ROOT / 'templates/index.html').read_text()).render(
         resources=INLINE.render(), script=script, translations=translations, copy=copy,
+        page=page, pigments=pigments, pigment_color_data=dict(color_matching_data(), xyz_to_rgb=XYZ_TO_RGB),
+        pigment_rgb=spectrum_rgb(pigment_signal(pigments[0])[0]) if is_pigment else None,
+        pigment_script=(ROOT / 'pigments.js').read_text(),
         localization_script=(ROOT / 'localization.js').read_text(), **divs)
-    target = Path(output) if output else ROOT / 'dist/index.html'
+    target = Path(output) if output else ROOT / ('dist/pigments.html' if is_pigment else 'dist/index.html')
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(html)
     return target
@@ -151,3 +168,4 @@ def build(output=None):
 
 if __name__ == '__main__':
     print(build())
+    print(build(page="pigments"))

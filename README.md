@@ -121,3 +121,23 @@ For new UI text, add the same key to every catalog and use
 `{{ copy["your_key"] | e }}`). Use `data-i18n-aria` for accessible labels.
 `localization.js` handles switching, number formatting, and Bokeh labels;
 `callbacks.js` refreshes localized readouts when light settings change.
+
+## Pages and pigments
+
+The navigator beneath the title links `index.html` (Screen color) and
+`pigments.html` (Pigments). Both share the same layout. Pigments offers buttons
+for anthocyanin, indigo, chlorophyll and carotenoids, a reflected-spectrum plot, and a colored
+square computed from the spectrum. The subsection heading stays “Pigment”.
+
+Every selection numerically integrates D65 daylight × reflectance against the
+Stockman–Sharpe cone curves for the response bars, and against CIE 1931 XYZ
+color-matching functions for the square. XYZ is converted to sRGB with gamut
+clipping and the sRGB transfer function. Signals and colors are not precomputed.
+
+Indigo uses dyed-cotton reflectance digitized from Kawahito & Yasukawa (2009),
+Figure 3a; anthocyanin, chlorophyll and carotenoids use solid absorption curves
+approximately digitized from Féret et al. (2017), Figure 8 (PROSPECT-D).
+Absorption inputs use an explicit layer-over-white-backing reflection model.
+Source links and sample-specific notes appear below the pigment buttons.
+See `data/README.md` for provenance, boundary assumptions and adding spectra.
+The screen-color page retains its existing RGB model.
