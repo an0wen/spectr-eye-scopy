@@ -17,7 +17,7 @@ responses.data = {cone: ['S', 'M', 'L'], value: result.responses,
                   color: ['#789fdb', '#7caa75', '#df735f']};
 const selected = pigments[selection.active];
 swatch.text = `<div role="img" aria-label="${escapeHTML(copy.pigment_swatch_description)}"
-    style="height:180px;border-radius:12px;background:rgb(${result.rgb.join(',')})"></div>
+    style="width:180px;height:180px;border-radius:12px;background:rgb(${result.rgb.join(',')})"></div>
     <p style="text-align:center">RGB ${result.rgb.join(' · ')}</p>`;
 readout.text = `<p role="status" aria-live="polite">${escapeHTML(selected.name)} · ${escapeHTML(copy['light_' + illuminant.id])} · ` +
     result.responses.map((value, i) => `${['S', 'M', 'L'][i]} ${value.toFixed(1)}%`).join(' · ') + '</p>';

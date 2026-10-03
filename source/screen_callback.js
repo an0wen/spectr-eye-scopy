@@ -15,6 +15,6 @@ source.data.label = values.map(v => `${v.toFixed(1)}%`);
 source.change.emit();
 const displayed = linear.map(v => Math.round(255 * encode(v)));
 swatch.text = `<div role="img" aria-label="Color controlled by the four sliders"
-    style="height:180px;border-radius:12px;background:rgb(${displayed.join(',')})"></div>
+    style="width:180px;height:180px;border-radius:12px;background:rgb(${displayed.join(',')})"></div>
     <p style="text-align:center">RGB ${displayed.join(' · ')}</p>`;
 readout.text = `Cone responses: S ${values[0].toFixed(1)}%, M ${values[1].toFixed(1)}%, L ${values[2].toFixed(1)}%.`;

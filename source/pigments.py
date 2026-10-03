@@ -61,7 +61,8 @@ def build_panels(headings, text):
                                      label=['0.0%']*3, color=CONE_COLORS))
 
     reflection = wavelength_plot(text['reflectance_axis'])
-    reflection.line('wavelength', 'reflectance', source=spectrum, color='#33443d', line_width=2)
+    reflection.line('wavelength', 'reflectance', source=spectrum, color='#33443d', line_width=2,
+                    legend_label=text['reflectance_legend'])
     outgoing = wavelength_plot(text['power_axis'])
     outgoing.y_range.end = max(reference['daylight'])*1.05
     # Incident power has its own physical scale, unlike normalized sensitivity.
@@ -71,17 +72,20 @@ def build_panels(headings, text):
     spectrum.data.update(xs=fill.data['xs'] + [[]],
                          ys=fill.data['ys'] + [[]], color=fill.data['color'] + ['#000000'])
     outgoing.renderers[0].data_source = spectrum
-    outgoing.line('wavelength', 'daylight', source=spectrum, color='#adb4a4', line_dash='dashed')
-    outgoing.line('wavelength', 'light', source=spectrum, color='#33443d', line_width=2)
+    outgoing.line('wavelength', 'daylight', source=spectrum, color='#adb4a4', line_dash='dashed',
+                  legend_label=text['incident_legend'])
+    outgoing.line('wavelength', 'light', source=spectrum, color='#33443d', line_width=2,
+                  legend_label=text['reflected_legend'])
     sensitivity = wavelength_plot(text['sensitivity'])
     normalized = {cone: [v/max(reference['cones'][cone]) for v in reference['cones'][cone]]
                   for cone in ('S', 'M', 'L')}
     envelope = [max(values) for values in zip(*normalized.values())]
     rainbow_fill(sensitivity, grid, envelope)
     for cone, color in zip(('S', 'M', 'L'), CONE_COLORS):
-        sensitivity.line(grid, normalized[cone], color=color, line_width=2.5, legend_label=cone)
-    style_legend(sensitivity)
+        sensitivity.line(grid, normalized[cone], color=color, line_width=2.5,
+                         legend_label=text[cone + '_cone'])
     for chart in (reflection, outgoing, sensitivity):
+        style_legend(chart)
         chart.xaxis.axis_label = text['wavelength']
     bars = response_plot(responses, text['response'])
     selection = RadioButtonGroup(labels=[p['name'] for p in pigments], active=0,
@@ -92,7 +96,8 @@ def build_panels(headings, text):
         active=1, sizing_mode='stretch_width', stylesheets=[
             '.bk-btn-group {flex-wrap: wrap;} .bk-btn {font-size: 11px;}'])
     light_note = Div(sizing_mode='stretch_width')
-    swatch, note, readout = [Div(sizing_mode='stretch_width') for _ in range(3)]
+    swatch = Div(width=180, height=230, sizing_mode='fixed')
+    note, readout = [Div(sizing_mode='stretch_width') for _ in range(2)]
     callback = CustomJS(args=dict(pigments=pigments, reference=reference, selection=selection,
                                  spectrum=spectrum, responses=responses, swatch=swatch,
                                  note=note, readout=readout, copy=text, light_selection=light_selection,

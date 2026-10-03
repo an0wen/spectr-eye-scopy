@@ -29,11 +29,12 @@ def build_panels(headings, copy):
     spectrum.yaxis[0].name = 'emission_axis'
     spectrum_fill = rainbow_fill(spectrum, spectrum_source.data['wavelength'],
                                  spectrum_source.data['total'])
-    for channel, color in [('blue', '#789fdb'), ('green', '#7caa75'), ('red', '#df735f')]:
-        spectrum.line('wavelength', channel, source=spectrum_source, color=color, line_width=1.5)
+    for channel, color in [('red', '#df735f'), ('green', '#7caa75'), ('blue', '#789fdb')]:
+        spectrum.line('wavelength', channel, source=spectrum_source, color=color, line_width=1.5,
+                      legend_label=copy[channel + '_pixels'])
     spectrum.line('wavelength', 'total', source=spectrum_source, color='#33443d',
                   line_width=2, legend_label=copy['combined'])
-    spectrum.legend[0].items[0].name = 'combined_legend'
+    spectrum.legend[0].items[-1].name = 'combined_legend'
     sensitivity_source = ColumnDataSource(cone_sensitivities(), name='cone_sensitivities')
     spectrum_fill.name = 'spectrum_fill'
     sensitivity = wavelength_plot(copy['sensitivity'])
@@ -45,10 +46,10 @@ def build_panels(headings, copy):
     rainbow_fill(sensitivity, sensitivity_source.data['wavelength'], envelope)
     for cone, color in [('S', '#789fdb'), ('M', '#7caa75'), ('L', '#df735f')]:
         sensitivity.line('wavelength', cone, source=sensitivity_source, color=color,
-                         line_width=2.5, legend_label=cone)
+                         line_width=2.5, legend_label=copy[cone + '_cone'])
     for panel in (spectrum, sensitivity):
         style_legend(panel)
-    swatch = Div(sizing_mode='stretch_width')
+    swatch = Div(width=180, height=230, sizing_mode='fixed')
     readout = Div(sizing_mode='stretch_width')
     callback = CustomJS(args=dict(red=sliders[0], green=sliders[1], blue=sliders[2],
                                   luminosity=sliders[3], source=source, matrix=RGB_TO_LMS,

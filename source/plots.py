@@ -71,7 +71,7 @@ def response_plot(source, y_label):
 
 def style_legend(panel):
     panel.legend.location = 'top_right'
-    panel.legend.orientation = 'horizontal'
+    panel.legend.orientation = 'vertical'
     panel.legend.label_text_font_size = '10px'
     panel.legend.background_fill_alpha = 0
     panel.legend.border_line_color = None
