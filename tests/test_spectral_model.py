@@ -1,5 +1,5 @@
 import unittest
-from spectral_model import pixel_spectrum, cone_sensitivities
+from source.spectral_model import pixel_spectrum, cone_sensitivities
 
 
 class SpectralModelTests(unittest.TestCase):

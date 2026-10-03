@@ -1,6 +1,6 @@
 # Cone sensitivity data
 
-`cone_fundamentals.csv` contains the 390–780 nm subset of the Stockman & Sharpe
+`receptors/cone_fundamentals.csv` contains the 390–780 nm subset of the Stockman & Sharpe
 2 Degree Cone Fundamentals (1 nm sampling, energy basis), in wavelength/L/M/S
 column order. Plotting normalizes each curve to its own peak.
 
@@ -17,9 +17,10 @@ These are reference sensitivity data, not measurements of the user's eyes.
 
 ## Pigment spectra and provenance
 
-The Gaussian starter spectra have been replaced. `pigments.json` contains
-sampled `values`, `wavelength` in nm, a `kind` (`reflectance` or `absorbance`),
-and source metadata. Archived input data is in `sources/`.
+Each CSV in `pigments/` contains one pigment: metadata comments followed by
+`wavelength,value` samples. The bundled numerical values are unchanged from the legacy archive. Historical
+digitization inputs mentioned below remain in the local ignored `legacy/data/sources/`
+archive; they are not required for this build or distributed with the new page.
 
 - **Indigo:** indigo-dyed cotton, Awa natural indigo / fermentation, sample No. 1
   (open circles) in Figure 3a of Kawahito, M. & Yasukawa, R. (2009),
@@ -57,7 +58,7 @@ and source metadata. Archived input data is in `sources/`.
   The 400 nm values are held to 390 nm and the zero 750 nm values to 780 nm;
   these unplotted tails are assumptions. Chlorophyll represents the figure's
   chlorophyll pool, not the previous isolated chlorophyll-a solvent sample.
-  The build divides each curve by its own maximum to obtain the chosen peak
+  The legacy data preparation divided each curve by its own maximum to obtain the chosen peak
   one-way absorbance of 1. This uses the absorption shape, not the absolute
   coefficient as dimensionless absorbance, and does not implement PROSPECT-D
   leaf radiative transfer or assume equal pigment mass across the three curves.
@@ -78,23 +79,61 @@ pH-dependent transformations. Do not interpret absorption as `1 - reflectance`.
 
 ### Adding or updating a pigment
 
-Use finite, strictly increasing wavelengths covering 390–780 nm, with equally
-sized finite sample arrays. Reflectance must lie in [0,1]; absorbance is
-nonnegative. Values are linearly interpolated before conversion to reflectance.
-For measured reflectance, supply `kind: "reflectance"` to bypass the layer model.
-Add an `id` and `id_note` entry in each translation catalog, plus `source` and
-`source_url` in the data. Record measurement conditions and all transformations.
-Buttons are generated automatically; RGB and S/M/L are calculated on selection.
+Add a UTF-8 `.csv` file anywhere under `data/pigments/`, including a nested
+folder. `python make_html.py` discovers every CSV recursively at build time
+(case-insensitive extension), in alphabetical relative-path order. The first
+file is the initially selected pigment. Filenames are otherwise unrestricted.
+There is no registry to update and no code or translation edits are required.
 
-`python scripts/prepare_pigments.py` reproduces the four bundled entries from
-archived inputs, without downloading anything. Then `python app.py` builds both
-pages. Future custom entries can be added directly to `pigments.json`; the
-preparation script intentionally reconstructs only the four bundled entries.
+Use this format (the values below are an illustrative gray reflector):
+
+```csv
+# id: my_pigment
+# name: My pigment
+# kind: reflectance
+# source: My measurements, sample 1
+# source_url: https://example.org/my-measurements
+# note: Measured on a white backing; wavelengths in nm.
+wavelength,value
+390,0.5
+780,0.5
+```
+
+Replace the example source and values with your own. Required metadata:
+
+| Key | Meaning |
+| --- | --- |
+| `id` | Unique across all CSV files; lowercase letters, digits, hyphens or underscores |
+| `name` | Display name used by the selector and response readout |
+| `kind` | `reflectance` or `absorbance` |
+| `source` | Plain-text attribution shown below the selector |
+| `source_url` | Absolute HTTP or HTTPS link to the source |
+
+`note` is optional and displayed below the selector. Additional metadata such
+as `solvent`, `concentration` or `license` is preserved in the embedded pigment
+record but not displayed automatically. Add information visitors need to `note`.
+Metadata values are plain text, one line each; colons and commas within values
+are allowed. Duplicate keys and empty metadata values are errors. Keep all
+`# key: value` lines before the CSV header. Blank lines are allowed. Standard
+CSV quoting is supported for sample fields.
+
+The columns must be exactly `wavelength,value`. Supply at least two finite
+samples with strictly increasing wavelengths spanning 390–780 nm. Wavelengths
+are in nanometers; values are dimensionless. Reflectance is a fraction in [0,1],
+not a percentage. Absorbance is nonnegative base-10, one-way absorbance. There
+is no automatic peak normalization: supply the intended layer strength.
+Values are linearly interpolated before absorbance is converted to reflection.
+Document measurement conditions, any endpoint extensions, and transformations.
+
+Invalid files and duplicate IDs stop the build with a filename in the error.
+An empty pigments folder is also an error. Rebuild and commit `index.html` to
+update GitHub Pages; CSV discovery happens in Python, while the published page
+uses embedded data and needs no directory listing, fetch, or server.
 
 ## Spectrum to screen color
 
-`cie_xyz_1931_2deg.csv` contains the 390–780 nm CIE 1931 2° XYZ color-matching
-functions at 1 nm. `cie_d65.csv` contains D65 at 5 nm, linearly interpolated to
+`colorimetry/cie_xyz_1931_2deg.csv` contains the 390–780 nm CIE 1931 2° XYZ color-matching
+functions at 1 nm. `spectra/d65_emission_colour_science_0.4.6.csv` contains D65 at 5 nm, linearly interpolated to
 1 nm during the build. Both were extracted from the literal tables in Colour
 Science **v0.4.6**:
 [observer data](https://raw.githubusercontent.com/colour-science/colour/v0.4.6/colour/colorimetry/datasets/cmfs.py),
@@ -103,7 +142,7 @@ Official CIE dataset descriptions:
 [1931 observer](https://www.cie.co.at/datatable/cie-1931-colour-matching-functions-2-degree-observer),
 [D65](https://www.cie.co.at/datatable/cie-standard-illuminant-d65).
 
-For each selection, form reflected spectral power `E(λ) R(λ)` with D65 `E`.
+For each selection, form reflected spectral power `E(λ) R(λ)` with the selected illuminant `E`.
 Trapezoidal integrals against XYZ matching functions are normalized by
 `∫ E(λ) ȳ(λ) dλ` (perfect white Y=1). Convert XYZ to linear sRGB using the
 [W3C matrix](https://www.w3.org/TR/css-color-4/#color-conversion-code), clip to
@@ -115,3 +154,50 @@ Cone bars independently integrate `E R C` for each Stockman–Sharpe cone `C`,
 divided by `∫ E C dλ`. Thus a perfect white reflector is 100% in every cone.
 The cone basis and CIE 1931 XYZ observer are separate published approximations;
 the square is not synthesized by treating the S/M/L bars as RGB channels.
+
+
+## Incident-light choices
+
+`source/illuminants.py` constructs four spectra on the 1 nm grid:
+
+- **Full white:** constant power per nanometer (equal-energy illuminant).
+- **D65:** the bundled CIE daylight reference, unchanged in spectral shape.
+- **Tube light (FL2):** `spectra/fl2_emission_cie_2018.csv` contains the CIE FL2
+  fluorescent reference, including phosphor emission and mercury lines. Extracted
+  column FL2 (third column) and wavelengths 390–780 nm from
+  [CIE 2018 fluorescent spectra, 1 nm](https://doi.org/10.25039/CIE.DS.54hy6srn).
+  Original download: https://files.cie.co.at/Publications-datasets/CIE_illum_FLs_1nm.csv
+  (MD5 verified: `77df774b47c2de724211d5f26592759e`). Values are unchanged in the
+  CSV; the build scales them to equal white-reflector luminance. This reference
+  represents a typical fluorescent tube, not every tube or a particular product.
+  Attribution: International Commission on Illumination (CIE), Vienna, 2018,
+  CIE 015:2018 tables 10.1–10.3. This extracted dataset is licensed under
+  [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), as is the
+  embedded normalized FL2 data; it is not covered by the project's code license.
+- **Incandescent bulb:** a 2856 K blackbody approximation using
+  `B_lambda ∝ lambda^-5 / (exp(0.01438776877 / (lambda*T)) - 1)` with lambda in
+  meters. It does not model wavelength-dependent tungsten emissivity.
+
+Each spectrum is multiplied by a constant so its integral against the CIE y
+function equals that of the original D65 reference. Thus sources have equal
+white-reflector luminance over 390–780 nm, not equal electrical power. Cone
+percentages use white under the currently selected source. XYZ uses that same
+source's white-Y denominator; conversion to the sRGB display does not adapt the
+white point, so the lamp's color cast remains visible. Display clipping can
+limit saturated colors.
+
+## Lighter indigo example
+
+`pigments/indigo_light.csv` uses multiplicative reflectance scaling:
+`R_light(lambda) = 5 × R_indigo(lambda)`, with no added white component.
+The original spectrum is untouched. The scaled reflectance spans 0.125–0.4,
+so no clipping is needed. Scaling preserves spectral shape and XYZ chromaticity
+before display gamut clipping; outgoing light, cone responses and XYZ all grow
+fivefold under a fixed lamp. Encoded sRGB channel values do not grow fivefold
+because of the nonlinear transfer curve. This is an illustrative brightness
+change, not an independently measured fabric or a dye-concentration model.
+
+Denim commonly includes dyed warp and undyed filling yarns, while ring dyeing
+leaves pale cores. Abrasion and finishing reveal more pale cotton. See
+[CottonWorks denim basics](https://cottonworks.com/learning-hub/denim/denim-basics/)
+and [finishing](https://cottonworks.com/learning-hub/denim/denim-finishing/).

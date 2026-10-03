@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ text.page_title }}</title>
+  {{ resources | safe }}
+  <style>{{ css | safe }}</style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">
+        <a href="https://github.com/an0wen/spectr-eye-scopy" target="_blank" rel="noopener noreferrer">{{ text.brand }}</a><span class="brand-slash"> /</span>
+        <div class="source-link">{{ text.source_code }} <a href="https://github.com/an0wen/spectr-eye-scopy" target="_blank" rel="noopener noreferrer">github.com/an0wen/spectr-eye-scopy</a></div>
+      </div>
+      <span class="tag">{{ text.tagline }}</span>
+    </header>
+
+    <nav class="page-nav" aria-label="{{ text.pages_label }}">
+      <a href="#screen" aria-current="page">{{ text.screen_page }}</a>
+      <a href="#pigments">{{ text.pigments_page }}</a>
+    </nav>
+
+    {% for page in ['screen', 'pigments'] %}
+    <section id="{{ page }}" class="page" aria-labelledby="{{ page }}-heading" {% if page == 'pigments' %}hidden{% endif %}>
+      <div class="intro">
+        <div class="intro-top">
+          <div class="eyebrow">{{ text.eyebrow }}</div>
+          <div class="language">{{ text.language }} <span lang="en">{{ text.english }}</span></div>
+        </div>
+        <h1 id="{{ page }}-heading">{{ text.heading }}</h1>
+        <p>{{ text[page + '_intro'] }}</p>
+      </div>
+      <div class="lab" aria-label="{{ text[page + '_workspace'] }}">
+        {% for number in range(1, 4) %}
+        <div class="workspace-column">{{ panels[page + '_' + number|string] | safe }}</div>
+        {% endfor %}
+      </div>
+      {% if page == 'screen' %}
+      <details class="model">
+        <summary>{{ text.model_summary }}</summary>
+        {% for key in ['model_conversion', 'model_limits', 'model_spectrum'] %}
+        <p>{{ text[key] }}</p>
+        {% endfor %}
+      </details>
+      {% endif %}
+      {% if page == 'pigments' %}
+      <details class="model" open>
+        <summary>{{ text.math_title }}</summary>
+        {% for key in ['math_grid', 'math_reflectance', 'math_light', 'math_cones', 'math_integral', 'math_rgb'] %}
+        <p>{{ text[key] }}</p>
+        {% endfor %}
+      </details>
+      <details class="model">
+        <summary>{{ text.denim_title }}</summary>
+        <p>{{ text.denim_explanation }}</p>
+        <p>{{ text.denim_model }}</p>
+        <p><a href="https://cottonworks.com/learning-hub/denim/denim-basics/" target="_blank" rel="noopener noreferrer">{{ text.denim_reference }}</a></p>
+      </details>
+      <details class="model">
+        <summary>{{ text.limits_title }}</summary>
+        <p>{{ text.pigment_model_limits }}</p>
+        <p>{{ text.pigment_model_spectrum }}</p>
+      </details>
+      {% endif %}
+    </section>
+    {% endfor %}
+
+    <footer>
+      <div>{{ text.footer_brand }} &nbsp; / &nbsp; {{ text.footer }}</div>
+      <div>{{ text.author_credit }}</div>
+      <div>{{ text.personal_website }} <a href="https://an0wen.github.io" target="_blank" rel="noopener noreferrer">an0wen.github.io</a></div>
+    </footer>
+  </main>
+  <script>{{ navigation | safe }}</script>
+  {{ bokeh_script | safe }}
+</body>
+</html>

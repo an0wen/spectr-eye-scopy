@@ -1,143 +1,171 @@
-# spectr-eye-scopy
+# Spectr-eye-scopy
 
-An interactive Bokeh outreach experiment: mix RGB light, vary its intensity, and
-compare approximate S, M and L cone responses. Includes a responsive layout,
-original SVG eye illustration, color presets, and an explanation of the model.
+A small, static Bokeh website for exploring light and the eye. The pigments view includes five interactive pigments and four incident-light choices, spectral plots, cone responses,
+and a calculated sRGB preview. The RGB screen view restores the legacy RGB and luminosity sliders, live swatch, illustrative emission spectrum, cone sensitivity curves, and white-normalized Hunt–Pointer–Estevez responses.
 
-## Run locally
+## Structure
 
-```sh
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
-python -m http.server 8000 --directory dist
+```text
+LICENSE
+README.md
+requirements.txt
+make_html.py
+index.html                         Generated website
+translations/
+    en.json                        Shared website text in English
+data/
+    receptors/
+        cone_fundamentals.csv      Cone sensitivity reference table
+    spectra/
+        d65_emission_colour_science_0.4.6.csv
+    images/                        Icons, molecules, and other graphics
+source/
+    interface.html                 Shared page shell
+    interface.css                  Legacy interface styling
+    navigation.js                  Switching between the two views
 ```
 
-Open http://localhost:8000. `dist/index.html` is self-contained (including Bokeh
-JavaScript); it can also be opened directly. Callbacks run in the browser and do
-not require a Bokeh server. Presets restore luminosity to 100%.
+The existing `.gitignore` also remains at the root. `legacy/` is a local,
+ignored archive, and is not required to build or use the new website.
 
-## Deploy to Render
+Spectrum filenames follow `<pigment-or-light-source>_<type>_<source>.csv`,
+where type can be `emission`, `transmission`, `reflection`, or another
+appropriate quantity. Use descriptive column names and document units and
+provenance when adding data.
 
-Create a **Static Site** from this repository, with:
+## Build locally
 
-- Build command: `pip install -r requirements.txt && python app.py`
-- Publish directory: `dist`
-
-Alternatively, use the included `render.yaml` Blueprint. No deployment has been
-performed by this project setup.
-
-## Color model
-
-`color_model.py` provides `cone_activation(red, green, blue, luminosity=1)`
-(return order **S, M, L**) and `display_rgb(...)`. RGB inputs are encoded sRGB
-values from 0 to 255; luminosity is a linear-light multiplier from 0 to 1.
-
-1. Decode the sRGB transfer function.
-2. Multiply linear RGB by luminosity.
-3. Transform linear sRGB to CIE XYZ (D65), then Hunt–Pointer–Estevez LMS.
-4. Normalize each response against its own full-intensity sRGB white response.
-5. Reverse LMS to SML for the displayed bars. Re-encode the dimmed linear RGB
-   for the displayed square.
-
-The normalized matrix is passed from Python into `callbacks.js`, keeping the
-browser and Python model coefficients identical. Normalization is fixed, never
-relative to the current maximum, so reducing light reduces every bar.
-
-This is an educational estimate of relative cone excitation, not a spectral
-reconstruction or a physiological firing-rate model. RGB cannot determine a
-unique spectrum. Screen calibration, adaptation, rods and observer differences
-are outside the model. The luminosity control is relative intensity, not an
-absolute photometric measurement. Bar colors identify cone types, not separate
-red/green/blue receptors.
-
-Sources: [W3C sRGB conversions](https://www.w3.org/TR/css-color-4/#color-conversion-code)
-and [Hunt–Pointer–Estevez matrix](https://www.colour-science.org/api/0.3.4/html/_modules/colour/appearance/hunt.html).
-
-## Edit and verify
-
-- `templates/index.html`: page layout, styling and eye illustration.
-- `app.py`: Bokeh sliders, plot and standalone build.
-- `callbacks.js`: live color and response updates.
-- `color_model.py`: reusable conversion functions.
+Python builds the HTML; visitors only need a browser. From the project root,
+reuse the existing environment without downloading anything:
 
 ```sh
-python -m unittest discover -s tests -v
-python app.py
+legacy/venv/bin/python make_html.py
 ```
 
-## Spectral panels
-
-The left panel shows a **hypothetical** RGB pixel spectrum, with Gaussian bands
-centered at 625, 535 and 460 nm (standard deviations 18, 22 and 16 nm).
-`pixel_spectrum` in `spectral_model.py` scales these bands by decoded linear RGB
-and luminosity; it does not renormalize on slider changes. Zero light gives a
-flat zero spectrum. Real display emission spectra depend on the display; these
-curves are not calibrated to reproduce the exact sRGB primaries.
-
-The right panel shows published Stockman–Sharpe 2° cone sensitivity data, each
-normalized to its own peak. See `data/README.md` for provenance. The new plots
-are teaching illustrations; response bars still use the original HPE matrix,
-not an integral of the hypothetical emission and Stockman–Sharpe curves.
-
-## Manage translations
-
-The language selector below the header supports English, French, and Spanish.
-English is the default; a visitor's selection is saved in their browser when
-local storage is available. Switching languages preserves the current light
-settings. The brand name and “An experiment in seeing” stay in English.
-
-Edit the plain-text values in these UTF-8 JSON files:
-
-- `translations/en.json`: English and the reference list of translation keys.
-- `translations/fr.json`: French.
-- `translations/es.json`: Spanish.
-
-For example, change `"heading"` to edit the main headline, `"intro"` for the
-introduction, and `"model_*"` entries for the model explanation. Keep keys the
-same across every file. Keep `{s}`, `{m}`, and `{l}` in `response_readout`:
-the app substitutes the current cone percentages. Use plain text, not HTML.
-Scientific symbols and names (S/M/L, sRGB, nm, Stockman–Sharpe) remain unchanged.
-
-Rebuild after editing:
+On a fresh checkout, use a Python environment with the dependencies installed:
 
 ```sh
-python app.py
+python -m pip install -r requirements.txt
+python make_html.py
 ```
 
-Refresh the local preview, or redeploy the rebuilt `dist/index.html`. All
-translations are embedded in that standalone file; no translation API or
-network request is needed. The build rejects missing/extra keys and empty values.
+Open `index.html` in a browser. Bokeh's JavaScript and CSS are embedded, so
+there is no CDN dependency or Python server. The generated file is larger
+than the source; edit the files in `source/`, `make_html.py`, or `translations/en.json`, then rebuild
+instead of editing the HTML directly. The build works from any working directory.
 
-To add a language, copy `translations/en.json` to a language-code file such as
-`translations/de.json`, translate every value, and add an option to the
-`#language` selector in `templates/index.html`, for example
-`<option value="de" lang="de">Deutsch</option>`. Rebuild and check the page,
-charts, controls, and model explanation in that language.
+Pigment interactions use Bokeh `CustomJS` callbacks in `source/`. All reference
+data and JavaScript are embedded during the build. There are no runtime data
+fetches, external scripts, Python callbacks, or server requirements.
 
-For new UI text, add the same key to every catalog and use
-`data-i18n="your_key"` on its text element (with an English Jinja fallback like
-`{{ copy["your_key"] | e }}`). Use `data-i18n-aria` for accessible labels.
-`localization.js` handles switching, number formatting, and Bokeh labels;
-`callbacks.js` refreshes localized readouts when light settings change.
+Both views live in one HTML file: `index.html#screen` and
+`index.html#pigments`. Navigation uses ordinary hash links, including browser
+Back/Forward and direct links. No route rewrites or second HTML file are needed.
+The shell uses HTML/CSS, with Bokeh widgets and plots in the pigment workspace. English is the only language available.
 
-## Pages and pigments
+## GitHub Pages
 
-The navigator beneath the title links `index.html` (Screen color) and
-`pigments.html` (Pigments). Both share the same layout. Pigments offers buttons
-for anthocyanin, indigo, chlorophyll and carotenoids, a reflected-spectrum plot, and a colored
-square computed from the spectrum. The subsection heading stays “Pigment”.
+Commit the new source files and generated `index.html`. In the repository's
+Pages settings, deploy from the desired branch and its root directory.
+Rebuild and commit `index.html` after source changes; GitHub Pages serves the
+finished file and does not run Python. No build workflow is included.
 
-Every selection numerically integrates D65 daylight × reflectance against the
-Stockman–Sharpe cone curves for the response bars, and against CIE 1931 XYZ
-color-matching functions for the square. XYZ is converted to sRGB with gamut
-clipping and the sRGB transfer function. Signals and colors are not precomputed.
+The old tracked paths currently appear as deletions because their files were
+moved into `legacy/`. Include those deletions in the fresh-start commit.
+Ignoring `legacy/` keeps it out of future commits; it does not erase earlier
+versions from Git history.
 
-Indigo uses dyed-cotton reflectance digitized from Kawahito & Yasukawa (2009),
-Figure 3a; anthocyanin, chlorophyll and carotenoids use solid absorption curves
-approximately digitized from Féret et al. (2017), Figure 8 (PROSPECT-D).
-Absorption inputs use an explicit layer-over-white-backing reflection model.
-Source links and sample-specific notes appear below the pigment buttons.
-See `data/README.md` for provenance, boundary assumptions and adding spectra.
-The screen-color page retains its existing RGB model.
+## Starter data provenance
+
+Both CSV files were copied unchanged from `legacy/data/`, without downloads
+or numerical transformations. Provenance below is retained from the legacy
+documentation.
+
+- `data/receptors/cone_fundamentals.csv`: Stockman–Sharpe 2° cone fundamentals,
+  energy basis, sampled from 390 to 780 nm at 1 nm intervals. Columns are
+  `wavelength` (nm), `L`, `M`, and `S` (relative sensitivity). Extracted from
+  Colour Science v0.4.6, attributed to Stockman & Sharpe (2000) via CVRL.
+  These are reference sensitivities, not measurements of a particular eye.
+- `data/spectra/d65_emission_colour_science_0.4.6.csv`: CIE D65 relative
+  spectral power from Colour Science v0.4.6. Columns are `wavelength` (nm)
+  and `power` (relative units), sampled at 5 nm intervals over 390–780 nm.
+  This is a reference daylight illuminant, not an absolute irradiance measurement.
+
+The project retains its original MIT license in `LICENSE`.
+
+
+## Pigments: where the code lives
+
+- `source/pigment_math.js`: the numerical model, independent of the interface.
+  Start here to understand the math. `interpolate` joins sampled points;
+  `reflectance` converts absorbance to reflection when needed; `integrate`
+  adds trapezoidal areas; `calculate` computes outgoing light, cone responses,
+  XYZ and RGB; `encodeSRGB` converts linear intensity to an 8-bit display value.
+- `source/pigment_callback.js`: calls the model when a pigment is selected,
+  then updates plots, bars, color preview, accessible readout and attribution.
+- `source/pigment_data.py`: recursively discovers pigment CSVs, reads metadata
+  comments and validates spectra with filename-specific errors.
+- `source/pigments.py`: loads reference data, resamples D65, creates Bokeh
+  plots and controls, and connects the callback to selection and document load.
+  Python runs only when building the file.
+- `make_html.py`: combines both workspaces and embeds Bokeh and the models
+  into the generated `index.html`.
+- `source/interface.html` and `source/interface.css`: layout and responsive
+  styling. `source/eye.svg` is the original legacy eye illustration.
+- `translations/en.json`: shared interface labels and the on-page
+  “Follow the calculation” explanation.
+- `data/pigments/*.csv`: one pigment per file, with `# key: value` metadata
+  (id, name, kind, source, source_url, optional note) and `wavelength,value` rows.
+  Add a CSV anywhere under this folder and rebuild; no code or translation
+  edits are needed. See `data/README.md` for a copyable example.
+  `data/colorimetry/cie_xyz_1931_2deg.csv`: XYZ observer functions.
+  See `data/README.md` for provenance and assumptions.
+
+### The math, in order
+
+For every wavelength λ from 390 to 780 nm:
+
+1. Interpolate the reference samples onto the same 1 nm grid.
+2. Find reflectance R(λ). Indigo supplies this directly; lighter indigo uses an
+   explicit fivefold reflectance scaling. The absorption-based pigments
+   supply one-way absorbance A: transmission is 10^(-A), so two passes through
+   a layer over perfect white backing give R = 10^(-2A).
+3. Multiply the selected incident light E by R to get outgoing light L = E × R.
+4. For each S/M/L sensitivity C, compute
+   `100 × integral(E × R × C) / integral(E × C)`.
+   The denominator is a fixed perfect-white reference for that cone.
+   A 50% reflector therefore gives 50% in all three cones. Plot sensitivities
+   are peak-normalized for illustration; calculations use the original tables.
+5. Independently integrate L against the CIE x/y/z functions. Divide all three
+   by `integral(E × y)` so white has Y = 1. Multiply XYZ by the sRGB matrix,
+   clip to the display gamut, and apply the sRGB encoding curve.
+   The cone bars are not used as RGB channels.
+
+Every integral uses trapezoids: add
+`(next wavelength - wavelength) × (current height + next height) / 2`.
+The reflectance plot and outgoing-light plot are distinct: the second includes
+the selected lamp’s wavelength dependence. Its vertical axis adjusts to each
+lamp’s peaks, staying fixed when only the pigment changes. Reflectance stays 0–1.
+All lamps are normalized to equal white-reflector luminance. No chromatic
+adaptation is applied to the preview, so warm light retains a warm cast.
+
+### Verify
+
+```sh
+legacy/venv/bin/python make_html.py
+legacy/venv/bin/python -m unittest discover -s tests -v
+```
+
+On a fresh checkout use your installed Python environment instead. Tests require
+Node.js to execute the exact JavaScript model and selection callback. They check
+black/white/gray reflectors, two-pass absorption, irregular-grid integration,
+all pigment selections and standalone callback wiring. Browser layout should
+also be checked at desktop and mobile widths, including direct `#pigments`
+loading and navigation from the screen view.
+
+
+Incident spectra are generated in `source/illuminants.py`: equal-energy white,
+tabulated D65, the CIE FL2 fluorescent-tube reference, and a 2856 K Planck
+blackbody for incandescent light. The same callback handles both selectors.
+`data/pigments/indigo_light.csv` adds the modeled lighter fabric; its header
+records the multiplication factor (5), with no added white component. The page includes a jeans explanation and sources.

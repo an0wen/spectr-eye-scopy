@@ -1,0 +1,42 @@
+# id: indigo_light
+# name: Indigo ×5 (modeled)
+# kind: reflectance
+# source: Reflectance scaled by 5 from Kawahito & Yasukawa (2009), Fig. 3a; not a measured denim spectrum
+# source_url: https://doi.org/10.3390/ma2020661
+# note: R_light = 5 × R_indigo at every wavelength, with no added white component. Preserves spectral shape while increasing reflected light fivefold. Reflectance remains 0.125–0.4, so no clipping is needed. This is a brightness-scaling illustration, not a measured fabric or a dye-concentration model.
+# model: multiplicative reflectance scaling
+# reflectance_factor: 5
+wavelength,value
+390.0,0.315
+400.0,0.315
+410.0,0.375
+420.0,0.4
+430.0,0.39
+440.0,0.37000000000000005
+450.0,0.34500000000000003
+460.0,0.32
+470.0,0.29500000000000004
+480.0,0.275
+490.0,0.255
+500.0,0.235
+510.0,0.21000000000000002
+520.0,0.19
+530.0,0.17
+540.0,0.16
+550.0,0.15
+560.0,0.145
+570.0,0.13999999999999999
+580.0,0.135
+590.0,0.13
+600.0,0.125
+610.0,0.13
+620.0,0.13
+630.0,0.135
+640.0,0.13999999999999999
+650.0,0.15
+660.0,0.16
+670.0,0.17
+680.0,0.18500000000000003
+690.0,0.21000000000000002
+700.0,0.27999999999999997
+780.0,0.27999999999999997

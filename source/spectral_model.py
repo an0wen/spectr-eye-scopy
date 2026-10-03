@@ -2,7 +2,7 @@
 import csv
 import math
 from pathlib import Path
-from color_model import _validate, srgb_to_linear
+from source.color_model import _validate, srgb_to_linear
 
 WAVELENGTHS = tuple(range(390, 781))
 # Deliberately simple hypothetical RGB emitters: center and standard deviation, nm.
@@ -22,7 +22,7 @@ def pixel_spectrum(red, green, blue, luminosity=1):
 
 def cone_sensitivities():
     """Stockman–Sharpe 2° energy fundamentals, each normalized to peak 1."""
-    with (Path(__file__).resolve().parent / 'data/cone_fundamentals.csv').open() as f:
+    with (Path(__file__).resolve().parents[1] / 'data/receptors/cone_fundamentals.csv').open() as f:
         rows = list(csv.DictReader(f))
     result = {'wavelength': [float(row['wavelength']) for row in rows]}
     for cone in ('S', 'M', 'L'):

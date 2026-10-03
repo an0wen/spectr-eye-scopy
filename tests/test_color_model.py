@@ -1,5 +1,5 @@
 import unittest
-from color_model import cone_activation, display_rgb
+from source.color_model import cone_activation, display_rgb
 
 
 class ColorModelTests(unittest.TestCase):

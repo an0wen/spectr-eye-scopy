@@ -1,0 +1,10 @@
+<svg style="width:100%;height:auto" viewBox="0 0 240 190" role="img" aria-label="Eye receiving reflected light">
+<defs><linearGradient id="sclera" x1="0" x2="1"><stop stop-color="#fffef8"/><stop offset="1" stop-color="#dce5d8"/></linearGradient><linearGradient id="iris" x1="0" x2="1"><stop stop-color="#294c41"/><stop offset=".5" stop-color="#8ea790"/><stop offset="1" stop-color="#345d4d"/></linearGradient></defs>
+<path d="M177 80 Q205 80 226 66 L230 85 Q207 99 177 103Z" fill="#c8d3b9" stroke="#829779" stroke-width="2"/>
+<path d="M66 35 C128 2 194 37 194 95 C194 154 125 187 66 155 C42 139 34 117 34 95 C34 72 42 50 66 35Z" fill="url(#sclera)" stroke="#61776a" stroke-width="2.5"/>
+<path d="M66 35 C105 18 144 25 168 49 M168 141 C142 166 102 173 66 155" fill="none" stroke="#344e41" stroke-width="4" stroke-linecap="round"/>
+<path d="M51 54 Q9 95 51 136" fill="#e8f1e9" fill-opacity=".8" stroke="#829e91" stroke-width="2"/>
+<ellipse cx="46" cy="95" rx="13" ry="40" fill="url(#iris)" stroke="#345d4d" stroke-width="2"/>
+<ellipse cx="40" cy="95" rx="6" ry="20" fill="#172d28"/>
+<ellipse cx="38" cy="79" rx="3" ry="7" fill="#fff" opacity=".85"/>
+</svg>

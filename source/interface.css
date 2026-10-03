@@ -1,0 +1,82 @@
+/* Colors, spacing, and typography retained from the legacy interface. */
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: #f3f3eb;
+    color: #233e34;
+    font: 16px/1.6 system-ui, -apple-system, sans-serif;
+}
+
+main { max-width: 1180px; margin: auto; padding: 32px 32px 50px; }
+header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #d5d9cc;
+    padding-bottom: 20px;
+}
+a { color: #365f4d; }
+.source-link { font-size: 12px; overflow-wrap: anywhere; }
+.brand { font-weight: 750; font-size: 20px; letter-spacing: -.7px; }
+.brand a { text-decoration: none; }
+.brand a:hover { text-decoration: underline; }
+.brand-slash { color: #b29358; }
+.tag, .eyebrow { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; }
+.tag { border: 1px solid #ccd3c4; padding: 5px 12px; border-radius: 30px; }
+
+.page-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.page-nav a {
+    padding: 8px 18px;
+    border: 1px solid #ccd3c4;
+    border-radius: 24px;
+    text-decoration: none;
+    font-size: 14px;
+}
+.page-nav a:hover { background: #e8eddf; }
+.page-nav a[aria-current="page"] { background: #354f41; color: #fff; }
+a:focus-visible { outline: 2px solid #829779; outline-offset: 3px; }
+[hidden] { display: none !important; }
+
+.intro { margin: 30px 0 24px; }
+.intro-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.language { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.language span { border: 1px solid #ccd3c4; border-radius: 8px; padding: 7px 10px; background: #fbfaf6; }
+h1 {
+    font-size: clamp(32px, 5vw, 53px);
+    line-height: 1.1;
+    font-weight: 500;
+    letter-spacing: -2px;
+    margin: 12px 0 18px;
+}
+p { color: #617267; margin: 0; }
+
+/* Three stages of the experiment, stacked on small screens. */
+.lab {
+    background: #fbfaf6;
+    border: 1px solid #dce0d3;
+    border-radius: 18px;
+    padding: 28px;
+    display: grid;
+    grid-template-columns: minmax(230px, 1fr) 200px minmax(270px, 1.12fr);
+    gap: 24px;
+}
+.workspace-column { min-width: 0; min-height: 280px; }
+footer { font-size: 11px; color: #7e897c; margin-top: 36px; letter-spacing: 1px; }
+
+@media (max-width: 850px) {
+    main { padding: 20px 16px; }
+    .tag { display: none; }
+    .lab { grid-template-columns: 1fr; }
+    .workspace-column { min-height: 100px; }
+}
+
+@media (max-width: 420px) {
+    .intro-top { align-items: flex-start; flex-direction: column; gap: 8px; }
+}
+
+.model { margin-top: 24px; border-top: 1px solid #d5d9cc; padding-top: 16px; }
+.model summary { cursor: pointer; font-weight: 600; }
+.model p { margin-top: 12px; max-width: 95ch; }
